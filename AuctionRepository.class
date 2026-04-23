@@ -1,0 +1,76 @@
+package com.auction.service;
+
+import com.auction.model.AuctionItem;
+import com.auction.model.Bid;
+import com.auction.repository.AuctionRepository;
+import com.auction.repository.BidRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
+@Service
+public class AuctionService {
+
+    @Autowired
+    private AuctionRepository auctionRepository;
+
+    @Autowired
+    private BidRepository bidRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    public AuctionItem createAuction(AuctionItem item) {
+
+        // ✅ set starting bid
+        item.setCurrentBid(item.getStartingPrice());
+
+        // ✅ FIX: if endTime is null → set default (e.g. 10 minutes)
+        if (item.getEndTime() == null) {
+            item.setEndTime(java.time.LocalDateTime.now().plusMinutes(10));
+        }
+
+        return auctionRepository.save(item);
+    }
+
+    public List<AuctionItem> getAllAuctions() {
+        return auctionRepository.findAll();
+    }
+
+    public Bid placeBid(Long itemId, Bid bid) {
+
+        AuctionItem item = auctionRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        // ⛔ Auction ended check
+        if (item.getEndTime().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("Auction ended");
+        }
+
+        if (bid.getAmount() <= item.getCurrentBid()) {
+            throw new RuntimeException("Bid must be higher");
+        }
+
+        item.setCurrentBid(bid.getAmount());
+        auctionRepository.save(item);
+
+        bid.setItem(item);
+        Bid savedBid = bidRepository.save(bid);
+
+        // 🔴 Send only updated item
+        messagingTemplate.convertAndSend("/topic/bids/" + itemId, item);
+
+        return savedBid;
+    }
+
+
+    public void deleteAuction(Long id) {
+
+        AuctionItem item = auctionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        // ✅ allow delete even if endTime is null
+        auctionRepository.delete(item);
+    }
+}

@@ -1,0 +1,49 @@
+package com.auction.model;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+
+@Entity
+public class Bid {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private double amount;
+
+    @ManyToOne
+    @JoinColumn(name = "item_id")
+    @JsonBackReference
+    private AuctionItem item;
+
+    // Constructors
+    public Bid() {}
+
+    public Bid(double amount, AuctionItem item) {
+        this.amount = amount;
+        this.item = item;
+    }
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public AuctionItem getItem() {
+        return item;
+    }
+
+    public void setItem(AuctionItem item) {
+        this.item = item;
+    }
+}

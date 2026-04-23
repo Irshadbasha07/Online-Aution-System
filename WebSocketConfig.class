@@ -1,0 +1,7 @@
+package com.auction.repository;
+
+import com.auction.model.AuctionItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AuctionRepository extends JpaRepository<AuctionItem, Long> {
+}

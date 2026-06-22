@@ -1,0 +1,15 @@
+body {
+  background: linear-gradient(to right, #667eea, #764ba2);
+}
+
+.highlight {
+  border: 3px solid red;
+  background-color: #ffe6e6;
+  animation: blink 1s ease-in-out 3;
+}
+
+@keyframes blink {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); background-color: #ffcccc; }
+  100% { transform: scale(1); }
+}
